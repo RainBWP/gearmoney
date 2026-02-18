@@ -1,16 +1,42 @@
-# app_1_demo
+# DAM
+## Objetivo
+Aplicar
+- Formularios
+- Validación
+- Navegación
+- Manejo de Estado
 
-A new Flutter project.
+## Instrucciones
+Crear una app que
+### Pantalla 1 : Formulario
+Debe capturar
+1. Nombre del Alumno
+2. Matrícula
+3. Carrera
+#### Reglas de validación
+- Ningún campo puede estar vacío
+- La matrícula debe ser Numerica
+#### Boton Registrar
+Debe:
+1. Validar Formulario
+2. Guardar Datos
+3. Navegar a segunda pantalla
+### Pantalla 2 : Resultado
+Debe Mostrar:
+- Alumno Registrado
+    - Nombre
+    - Matrícula
+    - Carrera
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Restricciones
+Solo pueden usar:
+- StatefulWidget
+- StatelessWidget
+- setState
+- Text
+- TextFormField
+- ElevatedButton
+- Navigator
+- Scaffold
+- Form
+- GlobalKey
