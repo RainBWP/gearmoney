@@ -27,10 +27,7 @@ class BienvenidaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Universidad'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Universidad'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -94,8 +91,27 @@ class _FormularioScreenState extends State<FormularioScreen> {
 
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _matriculaController = TextEditingController();
-  final TextEditingController _carreraController = TextEditingController();
-  final TextEditingController _semestreController = TextEditingController();
+
+  final List<String> _opcionesCarrera = [
+    'Licenciatura en Ingeniera de Ciencias de la Computacion',
+    'Ciberseguridad',
+    'Ingeniero en Tecnlologias Inamalbricas',
+    'Inteligencia Artificial',
+  ];
+
+  final List<String> _opcionesSemestre = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    'OTRO',
+  ];
 
   final List<String> _opcionesCursos = [
     'Programacion web',
@@ -106,6 +122,8 @@ class _FormularioScreenState extends State<FormularioScreen> {
   ];
 
   final List<String> _cursosSeleccionados = [];
+  String? _carreraSeleccionada;
+  String? _semestreSeleccionado;
   String? _modalidad;
   bool _mostrarErrorCursos = false;
   bool _mostrarErrorModalidad = false;
@@ -113,8 +131,8 @@ class _FormularioScreenState extends State<FormularioScreen> {
   bool get _isFormReady {
     return _nombreController.text.trim().isNotEmpty &&
         _matriculaController.text.trim().isNotEmpty &&
-        _carreraController.text.trim().isNotEmpty &&
-        _semestreController.text.trim().isNotEmpty &&
+        _carreraSeleccionada != null &&
+        _semestreSeleccionado != null &&
         _cursosSeleccionados.isNotEmpty &&
         _modalidad != null;
   }
@@ -124,16 +142,12 @@ class _FormularioScreenState extends State<FormularioScreen> {
     super.initState();
     _nombreController.addListener(_refresh);
     _matriculaController.addListener(_refresh);
-    _carreraController.addListener(_refresh);
-    _semestreController.addListener(_refresh);
   }
 
   @override
   void dispose() {
     _nombreController.dispose();
     _matriculaController.dispose();
-    _carreraController.dispose();
-    _semestreController.dispose();
     super.dispose();
   }
 
@@ -170,8 +184,8 @@ class _FormularioScreenState extends State<FormularioScreen> {
         builder: (_) => ResultadoScreen(
           nombre: _nombreController.text.trim(),
           matricula: _matriculaController.text.trim(),
-          carrera: _carreraController.text.trim(),
-          semestre: _semestreController.text.trim(),
+          carrera: _carreraSeleccionada!,
+          semestre: _semestreSeleccionado!,
           cursos: _cursosSeleccionados,
           modalidad: _modalidad!,
         ),
@@ -182,10 +196,7 @@ class _FormularioScreenState extends State<FormularioScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Universidad'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Universidad'), centerTitle: true),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -214,22 +225,48 @@ class _FormularioScreenState extends State<FormularioScreen> {
               },
             ),
             const SizedBox(height: 14),
-            TextFormField(
-              controller: _carreraController,
+            DropdownButtonFormField<String>(
+              value: _carreraSeleccionada,
               decoration: const InputDecoration(labelText: 'Carrera'),
+              items: _opcionesCarrera
+                  .map(
+                    (carrera) => DropdownMenuItem<String>(
+                      value: carrera,
+                      child: Text(carrera),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _carreraSeleccionada = value;
+                });
+              },
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
+                if (value == null || value.isEmpty) {
                   return 'La carrera es obligatoria';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 14),
-            TextFormField(
-              controller: _semestreController,
+            DropdownButtonFormField<String>(
+              value: _semestreSeleccionado,
               decoration: const InputDecoration(labelText: 'Semestre Actual'),
+              items: _opcionesSemestre
+                  .map(
+                    (semestre) => DropdownMenuItem<String>(
+                      value: semestre,
+                      child: Text(semestre),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _semestreSeleccionado = value;
+                });
+              },
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
+                if (value == null || value.isEmpty) {
                   return 'El semestre actual es obligatorio';
                 }
                 return null;
@@ -241,15 +278,17 @@ class _FormularioScreenState extends State<FormularioScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            ..._opcionesCursos.map(
-              (curso) => CheckboxListTile(
-                value: _cursosSeleccionados.contains(curso),
-                title: Text(curso),
-                controlAffinity: ListTileControlAffinity.leading,
-                onChanged: (value) => _toggleCurso(curso, value ?? false),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ).toList(),
+            ..._opcionesCursos
+                .map(
+                  (curso) => CheckboxListTile(
+                    value: _cursosSeleccionados.contains(curso),
+                    title: Text(curso),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: (value) => _toggleCurso(curso, value ?? false),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                )
+                .toList(),
             if (_mostrarErrorCursos)
               const Padding(
                 padding: EdgeInsets.only(top: 4),
@@ -345,10 +384,7 @@ class ResultadoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Universidad'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Universidad'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -365,7 +401,10 @@ class ResultadoScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Carrera: $carrera', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 12),
-            Text('Semestre Actual: $semestre', style: const TextStyle(fontSize: 16)),
+            Text(
+              'Semestre Actual: $semestre',
+              style: const TextStyle(fontSize: 16),
+            ),
             const SizedBox(height: 12),
             Text(
               'Cursos: ${cursos.join(', ')}',
@@ -377,7 +416,9 @@ class ResultadoScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Comprobante enviado a impresion')),
+                  const SnackBar(
+                    content: Text('Comprobante enviado a impresion'),
+                  ),
                 );
               },
               child: const Text('Imprimir Comprobante'),
