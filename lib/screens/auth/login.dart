@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
+// import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'register.dart';
+import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
+import '../home/dashboard.dart';
+
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,7 +16,8 @@ class LoginScreen extends StatefulWidget {
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
-class LogoWidget extends StatelessWidget {
+
+class LogoWidget extends StatelessWidget { // Widget para el logo SVG
   const LogoWidget({super.key});
 
   @override
@@ -28,8 +35,29 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordInvalid = false;
 
   void _login() async {
+    if (!_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor ingresa un correo válido')),
+      );
+      return;
+    }
+    if (_isLoading) return; // Evitar múltiples taps
+    if (_passwordController.text.length < 6) {
+      HapticFeedback.mediumImpact();
+      if (mounted) {
+        setState(() => _isPasswordInvalid = true);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres')),
+      );
+      return;
+    }
+    if (mounted && _isPasswordInvalid) {
+      setState(() => _isPasswordInvalid = false);
+    }
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor completa todos los campos')),
@@ -40,18 +68,35 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Aquí irá la lógica de autenticación
-      // Por ahora solo mostramos un mensaje
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login implementado')),
+      await DatabaseHelper.instance.database; // Asegura que la base de datos esté inicializada
+      final user = await DatabaseHelper.instance.readUsuario(
+        _emailController.text,
+        _passwordController.text,
       );
+      if (!mounted) return;
+      if (user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Inicio de sesión exitoso')),
+        );
+        // Navegar al dashboard (reemplaza la ruta actual) y pasar datos del usuario
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => DashboardScreen(user: user)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Correo o contraseña incorrectos')),
+        );
+      }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     }
 
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -102,8 +147,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -112,14 +157,32 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 32),
 
               // Password Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Contraseña:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Contraseña:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: _isPasswordInvalid ? Colors.red : Colors.black,
+                      ),
+                    ),
+                    if (_isPasswordInvalid)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Contrasena no Valida',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -135,8 +198,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -150,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
+                    backgroundColor: AppColors.primary(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -190,8 +253,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextSpan(
                         text: 'Crea Una Cuenta Aqui',
-                        style: const TextStyle(
-                          color: Color(0xFF7C3AED),
+                        style: TextStyle(
+                          color: AppColors.primary(context),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
