@@ -98,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Historial', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+                    Expanded(child: Text('Historial', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context)))),
                     Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary(context)),
                   ],
                 ),
@@ -119,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Presupuestos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+                    Expanded(child: Text('Presupuestos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context)))),
                     Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary(context)),
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:gearmoney/core/colors.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/database/db_helper.dart';
@@ -22,6 +23,7 @@ void main() async {
   // Esto inicializa la base de datos al arrancar
   await DatabaseHelper.instance.database; 
 
+  debugPaintSizeEnabled = false; // borra una linea amarilla en el texto cuando debug
   runApp(const MyApp());
 }
 
