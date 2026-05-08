@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gearmoney/core/colors.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/database/db_helper.dart';
 import 'screens/auth/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
 
   // FFI only for desktop; Android/iOS must use native sqflite.
   final isDesktop = !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.windows ||
-          defaultTargetPlatform == TargetPlatform.linux ||
-          defaultTargetPlatform == TargetPlatform.macOS);
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS);
   if (isDesktop) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -31,8 +33,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'GearMoney',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary(context)),
         useMaterial3: true,
+        fontFamily: 'Verdana',
       ),
       home: const LoginScreen(),
     );
