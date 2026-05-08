@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
 import 'login.dart';
 import '../../core/database/db_helper.dart';
+import '../../core/colors.dart';
 
 
 
@@ -34,7 +35,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
-
+    if (!_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor ingresa un correo válido')),
+      );
+      return;
+    }
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Las contraseñas no coinciden')),
@@ -63,6 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('¡Cuenta creada exitosamente!')),
+          
         );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -133,8 +140,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder:  UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -159,8 +166,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder:  UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -186,8 +193,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -213,8 +220,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -240,8 +247,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7C3AED), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -255,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
+                    backgroundColor: AppColors.primary(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
