@@ -97,7 +97,8 @@ class DatabaseHelper {
   }) async {
     // Validaciones
     if (nombre.trim().isEmpty) throw Exception('El nombre es obligatorio');
-    if (apellidos.trim().isEmpty) throw Exception('Los apellidos son obligatorios');
+    if (apellidos.trim().isEmpty)
+      throw Exception('Los apellidos son obligatorios');
     if (correo.trim().isEmpty) throw Exception('El correo es obligatorio');
     if (contrasena.isEmpty) throw Exception('La contraseña es obligatoria');
     if (contrasena.length < 6) {
@@ -105,14 +106,14 @@ class DatabaseHelper {
     }
 
     final db = await instance.database;
-    
+
     // Verificar si el correo ya existe
     final existing = await db.query(
       'Usuario',
       where: 'correo = ?',
       whereArgs: [correo.trim().toLowerCase()],
     );
-    
+
     if (existing.isNotEmpty) {
       throw Exception('Este correo ya está registrado');
     }
@@ -125,25 +126,24 @@ class DatabaseHelper {
     });
   }
 
-  Future<Map<String, dynamic>?> readUsuario(String correo, String contrasena) async {
+  Future<Map<String, dynamic>?> readUsuario(
+    String correo,
+    String contrasena,
+  ) async {
     final db = await instance.database;
     final result = await db.query(
       'Usuario',
       where: 'correo = ? AND contrasena = ?',
       whereArgs: [correo.trim().toLowerCase(), contrasena],
     );
-    
+
     return result.isNotEmpty ? result.first : null;
   }
 
   Future<Map<String, dynamic>?> readUsuarioById(int id) async {
     final db = await instance.database;
-    final result = await db.query(
-      'Usuario',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    
+    final result = await db.query('Usuario', where: 'id = ?', whereArgs: [id]);
+
     return result.isNotEmpty ? result.first : null;
   }
 
@@ -175,7 +175,12 @@ class DatabaseHelper {
 
     if (updates.isEmpty) throw Exception('No hay datos para actualizar');
 
-    return await db.update('Usuario', updates, where: 'id = ?', whereArgs: [id]);
+    return await db.update(
+      'Usuario',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<int> deleteUsuario(int id) async {
@@ -222,16 +227,99 @@ class DatabaseHelper {
     return await db.query('Movimientos', orderBy: 'fecha DESC');
   }
 
-  Future<int> updateMovimiento(int id, Map<String, dynamic> datosActualizados) async {
-    if (datosActualizados.containsKey('cantidad') && datosActualizados['cantidad'] <= 0) {
+  Future<int> updateMovimiento(
+    int id,
+    Map<String, dynamic> datosActualizados,
+  ) async {
+    if (datosActualizados.containsKey('cantidad') &&
+        datosActualizados['cantidad'] <= 0) {
       throw Exception('La cantidad no puede ser 0');
     }
     final db = await instance.database;
-    return await db.update('Movimientos', datosActualizados, where: 'id = ?', whereArgs: [id]);
+    return await db.update(
+      'Movimientos',
+      datosActualizados,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<int> deleteMovimiento(int id) async {
     final db = await instance.database;
     return await db.delete('Movimientos', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // --- CRUD CATEGORIAS ---
+
+  Future<int> createCategoria({
+    required String nombre,
+    required String color,
+    required String icono,
+    required int usuarioId,
+  }) async {
+    if (nombre.trim().isEmpty)
+      throw Exception('El nombre de la categoría es obligatorio');
+
+    final db = await instance.database;
+    return await db.insert('Categorias', {
+      'nombre': nombre.trim(),
+      'color': color,
+      'icono': icono,
+      'usuario_id': usuarioId,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> readCategorias(int usuarioId) async {
+    final db = await instance.database;
+    return await db.query(
+      'Categorias',
+      where: 'usuario_id = ?',
+      whereArgs: [usuarioId],
+      orderBy: 'nombre ASC',
+    );
+  }
+
+  Future<Map<String, dynamic>?> readCategoriaById(int id) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'Categorias',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<int> updateCategoria(
+    int id, {
+    String? nombre,
+    String? color,
+    String? icono,
+  }) async {
+    final db = await instance.database;
+    final updates = <String, dynamic>{};
+
+    if (nombre != null && nombre.trim().isNotEmpty) {
+      updates['nombre'] = nombre.trim();
+    }
+    if (color != null && color.trim().isNotEmpty) {
+      updates['color'] = color;
+    }
+    if (icono != null && icono.trim().isNotEmpty) {
+      updates['icono'] = icono;
+    }
+
+    if (updates.isEmpty) throw Exception('No hay datos para actualizar');
+
+    return await db.update(
+      'Categorias',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteCategoria(int id) async {
+    final db = await instance.database;
+    return await db.delete('Categorias', where: 'id = ?', whereArgs: [id]);
   }
 }

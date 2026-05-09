@@ -4,6 +4,8 @@ import '../../core/database/db_helper.dart';
 import '../../components/money_display.dart';
 import '../../components/transaction_card_small.dart';
 import '../../components/budget_card_small.dart';
+import '../transactions/create_transactions.dart';
+import '../categories/category_list.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -31,7 +33,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final dbh = DatabaseHelper.instance;
 
     final allMov = await dbh.readMovimientos();
-    final int userId = (widget.user['id'] is int) ? widget.user['id'] as int : int.tryParse('${widget.user['id']}') ?? 1;
+    final int userId = (widget.user['id'] is int)
+        ? widget.user['id'] as int
+        : int.tryParse('${widget.user['id']}') ?? 1;
     // filter by usuario_id
     final userMov = allMov.where((m) => m['usuario_id'] == userId).toList();
 
@@ -39,7 +43,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int gastos = 0;
     for (var m in userMov) {
       final isIngreso = (m['is_ingreso'] == 1);
-      final cant = (m['cantidad'] is int) ? m['cantidad'] as int : int.tryParse('${m['cantidad']}') ?? 0;
+      final cant = (m['cantidad'] is int)
+          ? m['cantidad'] as int
+          : int.tryParse('${m['cantidad']}') ?? 0;
       if (isIngreso) {
         ingresos += cant;
       } else {
@@ -49,7 +55,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // budgets
     final db = await dbh.database;
-    final pres = await db.query('Presupuestos', where: 'usuario_id = ?', whereArgs: [userId], orderBy: 'id ASC');
+    final pres = await db.query(
+      'Presupuestos',
+      where: 'usuario_id = ?',
+      whereArgs: [userId],
+      orderBy: 'id ASC',
+    );
 
     setState(() {
       totalIngresos = ingresos;
@@ -62,76 +73,210 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        color: AppColors.background(context),
-        padding: EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(padding: EdgeInsets.all(12),
-            child: Text('Hola, ${widget.user['nombre']}!', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context)  )),
-          ),
-
-          // Card 1
-          Container(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                MoneyDisplay(amount: saldo, color: AppColors.textPrimary(context), sizeFont: 24, iconAtLeft: null),
-                SizedBox(height: 12),
-                MoneyDisplay(amount: totalIngresos, color: AppColors.success(context), sizeFont: 16, iconAtLeft: null),
-                SizedBox(height: 8),
-                MoneyDisplay(amount: totalGastos, color: AppColors.alert(context), sizeFont: 16, iconAtLeft: null),
-              ],
+    return Scaffold(
+      backgroundColor: AppColors.background(context),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              'Hola, ${widget.user['nombre']}!',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context),
+              ),
             ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Card 2 - Historial
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: AppColors.cardBackground(context), borderRadius: BorderRadius.circular(12)),
-            child: Column(
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground(context),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MoneyDisplay(
+                    amount: saldo,
+                    color: AppColors.textPrimary(context),
+                    sizeFont: 24,
+                    iconAtLeft: null,
+                  ),
+                  const SizedBox(height: 12),
+                  MoneyDisplay(
+                    amount: totalIngresos,
+                    color: AppColors.success(context),
+                    sizeFont: 16,
+                    iconAtLeft: null,
+                  ),
+                  const SizedBox(height: 8),
+                  MoneyDisplay(
+                    amount: totalGastos,
+                    color: AppColors.alert(context),
+                    sizeFont: 16,
+                    iconAtLeft: null,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(child: Text('Historial', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
-                    Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary(context)),
-                  ],
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CreateTransactionScreen(
+                            user: widget.user,
+                            initialIsIngreso: true,
+                          ),
+                        ),
+                      ).then((_) => _loadData());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success(context),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Nuevo Ingreso',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 8),
-                // first 3 movimientos or placeholders
-                ..._buildMovimientos(),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 16),
-
-          // Card 3 - Presupuestos
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: AppColors.cardBackground(context), borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text('Presupuestos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
-                    Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textSecondary(context)),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CreateTransactionScreen(
+                            user: widget.user,
+                            initialIsIngreso: false,
+                          ),
+                        ),
+                      ).then((_) => _loadData());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.alert(context),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Nuevo Gasto',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 8),
-                // show up to 2 budgets
-                ..._buildPresupuestos(),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CategoryListScreen(user: widget.user),
+                    ),
+                  ).then((_) => _loadData());
+                },
+                icon: const Icon(Icons.category),
+                label: const Text('Gestionar Categorías'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary(context),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground(context),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Historial',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: AppColors.textSecondary(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ..._buildMovimientos(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground(context),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Presupuestos',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: AppColors.textSecondary(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ..._buildPresupuestos(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    )
     );
   }
 
@@ -152,9 +297,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           d = DateTime.now();
         }
         final isIngreso = (m['is_ingreso'] == 1);
-        final cant = (m['cantidad'] is int) ? m['cantidad'] as int : int.tryParse('${m['cantidad']}') ?? 0;
+        final cant = (m['cantidad'] is int)
+            ? m['cantidad'] as int
+            : int.tryParse('${m['cantidad']}') ?? 0;
 
-        items.add(TransactionCardSmall(amount: cant, isIncome: isIngreso, name: name, date: d));
+        items.add(
+          TransactionCardSmall(
+            amount: cant,
+            isIncome: isIngreso,
+            name: name,
+            date: d,
+          ),
+        );
       } else {
         items.add(TransactionCardSmall());
       }
@@ -171,7 +325,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (int i = 0; i < take; i++) {
       final p = presupuestos[i];
       final name = p['nombre'] ?? '';
-      final monto = (p['monto'] is int) ? p['monto'] as int : int.tryParse('${p['monto']}') ?? 0;
+      final monto = (p['monto'] is int)
+          ? p['monto'] as int
+          : int.tryParse('${p['monto']}') ?? 0;
       items.add(BudgetCardSmall(name: name, amount: monto));
     }
 
