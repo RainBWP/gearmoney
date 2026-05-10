@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'register.dart';
 import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
-import '../home/dashboard.dart';
+import '../home/main_layout.dart';
 
 
 
@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         // Navegar al dashboard (reemplaza la ruta actual) y pasar datos del usuario
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => DashboardScreen(user: user)),
+          MaterialPageRoute(builder: (context) => MainLayout(user: user)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
