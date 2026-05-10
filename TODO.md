@@ -1,0 +1,44 @@
+# To Do List
+- [x] Login Page
+- [x] Registro Page
+- [x] SQL maps
+- Dashboard
+    - [x] Saldo Actual
+    - [x] Historial
+        - [x] Agregar
+    - [ ] Presupuesto
+    - [x] Categorías
+        - [x] Mostrar igual que en historial
+- Transacciones
+    - [x] Cerrar Transaccion
+    - [x] Borrar Transaccion
+    - [x] Editar Transaccion
+    - [x] Editar Transaccion con toque largo
+    - [x] Colorear Transaciones a gasto e ingreso
+    - [x] Uso de los chips
+- Nav
+    - [x] Intercambiar entre pantallas
+    - [ ] Mostrar en '+' opciones (parent)
+        - [x] Registra Movimiento
+        - [x] Registra Categoria
+        - [x] Registra Presupuesto
+        - [ ] Sustituir los placeholder con iconos
+- [ ] Estadísticas
+    - [ ] Intentar respetar las estadísticas en the mockup
+- Perfil
+    - [ ] Cerrar Perfil
+    - [ ] Borrar Perfil
+    - [ ] Editar perfil (Usar registro page)
+- Presupuesto
+    - [ ] Cerrar Presupuesto
+    - [ ] Borrar Presupuesto
+    - [ ] Editar Presupuesto
+    - [ ] Componente presupuesto para Dashboard
+- Categorias
+    - [x] Category pills selector (Wrap with colored pills) RESPETAR ESOOO!!!
+    - [ ] Mostrar categorias como pills en dashboard
+
+Adicionales:
+- [x] Componente MoneyInput
+- [x] Safe SVG loader
+

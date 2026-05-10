@@ -1,5 +1,10 @@
 # gearmoney
+App en flutter para control de Gastos
 
+Funciona en:
+- Android
+- IOS
+- Windows (Pero se ve feo)
 
 # Mockup Followed
 
