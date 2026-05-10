@@ -5,6 +5,9 @@ class MoneyFormatter {
   }
   static int parseToInt(String amount) {
     final doubleValue = double.tryParse(amount);
+    if (amount.isEmpty) {
+      return 0;
+    }
     if (doubleValue == null) {
       throw FormatException('Invalid money format');
     }
