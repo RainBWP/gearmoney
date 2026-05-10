@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
+import '../../core/utils/transactions_calculator.dart';
 import '../../components/money_display.dart';
 import '../../components/transaction_card_small.dart';
 import '../../components/budget_card_small.dart';
@@ -39,19 +40,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // filter by usuario_id
     final userMov = allMov.where((m) => m['usuario_id'] == userId).toList();
 
-    int ingresos = 0;
-    int gastos = 0;
-    for (var m in userMov) {
-      final isIngreso = (m['is_ingreso'] == 1);
-      final cant = (m['cantidad'] is int)
-          ? m['cantidad'] as int
-          : int.tryParse('${m['cantidad']}') ?? 0;
-      if (isIngreso) {
-        ingresos += cant;
-      } else {
-        gastos += cant;
-      }
-    }
+    final ingresos = await TransactionsCalculator.getTotalIngresosUltimoMes(
+      userId: userId,
+    );
+    final gastos = await TransactionsCalculator.getTotalGastosUltimoMes(
+      userId: userId,
+    );
 
     // budgets
     final db = await dbh.database;
@@ -61,6 +55,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       whereArgs: [userId],
       orderBy: 'id ASC',
     );
+
+    if (!mounted) return;
 
     setState(() {
       totalIngresos = ingresos;
