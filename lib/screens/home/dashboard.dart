@@ -4,7 +4,7 @@ import '../../core/database/db_helper.dart';
 import '../../components/money_display.dart';
 import '../../components/transaction_card_small.dart';
 import '../../components/budget_card_small.dart';
-import '../transactions/create_transactions.dart';
+// import '../transactions/create_transactions.dart';
 import '../categories/category_list.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -77,21 +77,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.background(context),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(32),
           children: [
             Text(
               'Hola, ${widget.user['nombre']}!',
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context),
+                color: AppColors.primary(context),
               ),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground(context),
+                color: AppColors.cardBackground(context).withValues(alpha: 0),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -100,22 +100,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   MoneyDisplay(
                     amount: saldo,
                     color: AppColors.textPrimary(context),
-                    sizeFont: 24,
+                    sizeFont: 40,
                     iconAtLeft: null,
                   ),
                   const SizedBox(height: 12),
                   MoneyDisplay(
                     amount: totalIngresos,
                     color: AppColors.success(context),
-                    sizeFont: 16,
-                    iconAtLeft: null,
+                    sizeFont: 24,
+                    iconAtLeft: 'assets/svgs/up-trend-svgrepo-com.svg',
                   ),
                   const SizedBox(height: 8),
                   MoneyDisplay(
                     amount: totalGastos,
                     color: AppColors.alert(context),
-                    sizeFont: 16,
-                    iconAtLeft: null,
+                    sizeFont: 24,
+                    iconAtLeft: 'assets/svgs/down-trend-round-svgrepo-com.svg',
                   ),
                 ],
               ),
@@ -166,13 +166,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ).then((_) => _loadData());
                 },
-                icon: const Icon(Icons.category),
-                label: const Text('Gestionar Categorías'),
+                icon: Icon(Icons.category, color: AppColors.textPrimary(context)),
+                label: Text('Gestionar Categorías', 
+                  style: TextStyle(fontSize: 16, 
+                    fontWeight: FontWeight.w600, 
+                    color: AppColors.textPrimary(context)
+                    ),
+                    textAlign: TextAlign.left,),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary(context),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: AppColors.cardBackground(context),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  alignment: Alignment.centerLeft,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
