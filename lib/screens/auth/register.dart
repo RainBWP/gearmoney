@@ -77,8 +77,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e.toString().replaceAll('Exception: ', '');
+        final isDuplicateEmail = errorMessage == 'Este correo ya está registrado';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+          SnackBar(
+            content: Text(
+              isDuplicateEmail ? 'Este correo ya está usado' : errorMessage,
+            ),
+          ),
         );
       }
     }
