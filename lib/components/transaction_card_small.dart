@@ -7,7 +7,11 @@ class TransactionCardSmall extends StatelessWidget {
 	final bool? isIncome;
 	final String? name;
 	final DateTime? date;
-	final Color? categoryColor; // placeholder circle color
+	final Color? categoryColor;
+	final String? categoryIcon;
+
+  final String svgUp = 'assets/svgs/up-trend-svgrepo-com.svg';
+  final String svgDown = 'assets/svgs/down-trend-round-svgrepo-com.svg';
 
 	const TransactionCardSmall({
 		super.key,
@@ -16,6 +20,7 @@ class TransactionCardSmall extends StatelessWidget {
 		this.name,
 		this.date,
 		this.categoryColor,
+		this.categoryIcon,
 	});
 
 	@override
@@ -33,19 +38,30 @@ class TransactionCardSmall extends StatelessWidget {
 			);
 		}
 
-		final moneyColor = isIncome == true ? Colors.green : Colors.red;
+		final moneyColor = isIncome == true 
+			? AppColors.income(context) 
+			: AppColors.expense(context);
+		final nameColor = isIncome == true 
+			? AppColors.income(context) 
+			: AppColors.expense(context);
 
 		return Container(
 			padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
 			child: Row(
 				children: [
-					// placeholder circle for category
+					// Category icon with background circle
 					Container(
 						width: 40,
 						height: 40,
 						decoration: BoxDecoration(
 							color: categoryColor ?? AppColors.primary(context),
 							shape: BoxShape.circle,
+						),
+						child: Center(
+							child: Text(
+								categoryIcon ?? '📁',
+								style: const TextStyle(fontSize: 20),
+							),
 						),
 					),
 					SizedBox(width: 12),
@@ -55,8 +71,11 @@ class TransactionCardSmall extends StatelessWidget {
 							children: [
 								Text(
 									name!,
-									style: TextStyle(fontSize: 14, color: AppColors.textPrimary(context)),
-
+									style: TextStyle(
+										fontSize: 14, 
+										color: nameColor,
+										fontWeight: FontWeight.w600,
+									),
 									maxLines: 1,
 									overflow: TextOverflow.ellipsis,
 								),
@@ -68,7 +87,10 @@ class TransactionCardSmall extends StatelessWidget {
 							],
 						),
 					),
-					MoneyDisplay(amount: amount!, color: moneyColor, sizeFont: 16),
+					MoneyDisplay(amount: amount!, 
+            color: moneyColor, 
+            sizeFont: 16, 
+            iconAtLeft: isIncome == true ? svgUp : svgDown),
 				],
 			),
 		);
