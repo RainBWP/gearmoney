@@ -384,7 +384,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                   color: AppColors.cardBackground(context),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: AppColors.alert(context).withOpacity(0.3),
+                    color: AppColors.alert(context).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),

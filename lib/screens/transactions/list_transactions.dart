@@ -5,6 +5,7 @@ import '../../core/database/db_helper.dart';
 import '../../components/money_display.dart';
 import 'create_transactions.dart';
 
+
 class ListTransactionsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
 
@@ -199,7 +200,7 @@ class _ListTransactionsScreenState extends State<ListTransactionsScreen> {
         decoration: BoxDecoration(
           color: AppColors.cardBackground(context),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
