@@ -7,6 +7,7 @@ import '../../components/transaction_card_small.dart';
 import '../../components/budget_card_small.dart';
 // import '../transactions/create_transactions.dart';
 import '../categories/category_list.dart';
+import '../../screens/transactions/list_transactions.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -27,11 +28,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> loadData() async {
     final dbh = DatabaseHelper.instance;
+    final db = await dbh.database;
 
     final allMov = await dbh.readMovimientos();
     final int userId = (widget.user['id'] is int)
@@ -39,6 +41,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
         : int.tryParse('${widget.user['id']}') ?? 1;
     // filter by usuario_id
     final userMov = allMov.where((m) => m['usuario_id'] == userId).toList();
+
+    // Obtener información de categorías para enriquecer los movimientos
+    final categories = await dbh.readCategorias(userId);
+    final categoryMap = {
+      for (final cat in categories)
+        cat['id']: {'nombre': cat['nombre'], 'color': cat['color'], 'icono': cat['icono']}
+    };
+
+    // Enriquecer movimientos con información de categorías
+    final enrichedMov = userMov.map((m) {
+      final catId = (m['categoria_id'] is int)
+          ? m['categoria_id'] as int
+          : int.tryParse('${m['categoria_id']}') ?? 0;
+      final catInfo = categoryMap[catId];
+      return {
+        ...m,
+        'categoria_nombre': catInfo?['nombre'] ?? 'Sin categoría',
+        'categoria_color': catInfo?['color'],
+        'categoria_icono': catInfo?['icono'] ?? '📁',
+      };
+    }).toList();
 
     final ingresos = await TransactionsCalculator.getTotalIngresosUltimoMes(
       userId: userId,
@@ -48,7 +71,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     // budgets
-    final db = await dbh.database;
     final pres = await db.query(
       'Presupuestos',
       where: 'usuario_id = ?',
@@ -62,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       totalIngresos = ingresos;
       totalGastos = gastos;
       saldo = ingresos - gastos;
-      movimientos = userMov;
+      movimientos = enrichedMov;
       presupuestos = pres;
     });
   }
@@ -99,17 +121,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     sizeFont: 40,
                     iconAtLeft: null,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   MoneyDisplay(
                     amount: totalIngresos,
-                    color: AppColors.success(context),
+                    color: AppColors.income(context),
                     sizeFont: 24,
                     iconAtLeft: 'assets/svgs/up-trend-svgrepo-com.svg',
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 3),
                   MoneyDisplay(
                     amount: totalGastos,
-                    color: AppColors.alert(context),
+                    color: AppColors.expense(context),
                     sizeFont: 24,
                     iconAtLeft: 'assets/svgs/down-trend-round-svgrepo-com.svg',
                   ),
@@ -125,24 +147,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Historial',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary(context),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ListTransactionsScreen(user: widget.user),
+                        ),
+                      ).then((_) => loadData());
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Historial',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary(context),
+                            ),
                           ),
                         ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: AppColors.textSecondary(context),
-                      ),
-                    ],
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ..._buildMovimientos(),
@@ -160,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       builder: (context) =>
                           CategoryListScreen(user: widget.user),
                     ),
-                  ).then((_) => _loadData());
+                  ).then((_) => loadData());
                 },
                 icon: Icon(Icons.category, color: AppColors.textPrimary(context)),
                 label: Text('Gestionar Categorías', 
@@ -226,8 +258,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (int i = 0; i < take; i++) {
       if (i < count) {
         final m = movimientos[i];
-        final name = m['nombre'] ?? '';
+        final name = m['categoria_nombre'] ?? m['nombre'] ?? '';
         final fechaStr = m['fecha'] ?? '';
+
+        // Obtener color de la categoría
+        final categoryColorHex = m['categoria_color'];
+        final catColor = (categoryColorHex is String && categoryColorHex.startsWith('#'))
+            ? Color(int.parse(categoryColorHex.replaceFirst('#', '0xff')))
+            : AppColors.primary(context);
+
+        final categoryIcon = m['categoria_icono'] ?? '📁';
+
         DateTime d;
         try {
           d = DateTime.parse(fechaStr);
@@ -245,6 +286,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             isIncome: isIngreso,
             name: name,
             date: d,
+            categoryColor: catColor,
+            categoryIcon: categoryIcon,
           ),
         );
       } else {
