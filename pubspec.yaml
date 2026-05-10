@@ -114,4 +114,4 @@ fonts:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/svgs/logos/GearMoneySmallLogo.svg"
+  image_path: "assets/svgs/logos/icon.png"
