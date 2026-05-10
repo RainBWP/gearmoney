@@ -97,8 +97,9 @@ class DatabaseHelper {
   }) async {
     // Validaciones
     if (nombre.trim().isEmpty) throw Exception('El nombre es obligatorio');
-    if (apellidos.trim().isEmpty)
+    if (apellidos.trim().isEmpty) {
       throw Exception('Los apellidos son obligatorios');
+    }
     if (correo.trim().isEmpty) throw Exception('El correo es obligatorio');
     if (contrasena.isEmpty) throw Exception('La contraseña es obligatoria');
     if (contrasena.length < 6) {
@@ -257,8 +258,9 @@ class DatabaseHelper {
     required String icono,
     required int usuarioId,
   }) async {
-    if (nombre.trim().isEmpty)
+    if (nombre.trim().isEmpty) {
       throw Exception('El nombre de la categoría es obligatorio');
+    }
 
     final db = await instance.database;
     return await db.insert('Categorias', {
@@ -289,8 +291,8 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first : null;
   }
 
-  Future<int> updateCategoria(
-    int id, {
+  Future<int> updateCategoria({
+    required int id,
     String? nombre,
     String? color,
     String? icono,
