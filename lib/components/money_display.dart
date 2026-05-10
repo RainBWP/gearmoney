@@ -43,6 +43,7 @@ class MoneyDisplay extends StatelessWidget {
 				width: iconSize,
 				height: iconSize,
 				fit: BoxFit.contain,
+        colorFilter: color != Colors.white ? ColorFilter.mode(color, BlendMode.srcIn) : null,
 			);
 		} else {
 			icon = Image.asset(
@@ -58,7 +59,7 @@ class MoneyDisplay extends StatelessWidget {
 			crossAxisAlignment: CrossAxisAlignment.center,
 			children: [
 				icon,
-				SizedBox(width: 8),
+				SizedBox(width: 4),
 				text,
 			],
 		);
