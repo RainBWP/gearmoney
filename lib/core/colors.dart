@@ -7,9 +7,11 @@ class AppColors {
     static const Color _textPrimaryLight = Color(0xFF000000);     // negro oscuro
     static const Color _textSecondaryLight = Color(0xFF888888);   // gris medio
     static const Color _cardBackgroundLight = Color(0xFFEEEEEE);  // gris claro
-    static const Color _alertLight = Color(0xFFFF4D4D);
+    static const Color _alertLight = Color(0xFFFF4D4D);           // rojo para gastos
     static const Color _warningLight = Color.fromARGB(255, 255, 166, 0);
-    static const Color _successLight = Color(0xFF4CAF50);
+    static const Color _successLight = Color(0xFF4CAF50);         // verde para ingresos
+    static const Color _expenseLight = Color(0xFFFF4D4D);         // rojo específico para gastos
+    static const Color _incomeLight = Color(0xFF4CAF50);          // verde específico para ingresos
 
     // ----- Dark theme values -----
     static const Color _primaryDark = Color(0xFFF0C300);           // la misma amarillo
@@ -20,6 +22,8 @@ class AppColors {
     static const Color _alertDark = Color(0xFFFF4D4D);
     static const Color _warningDark = Color.fromARGB(255, 255, 166, 0);
     static const Color _successDark = Color(0xFF4CAF50);
+    static const Color _expenseDark = Color(0xFFFF4D4D);           // rojo específico para gastos
+    static const Color _incomeDark = Color(0xFF4CAF50);            // verde específico para ingresos
 
     /// Getter helpers que devuelven el color según el mode
     static Color primary(BuildContext ctx) =>
@@ -62,5 +66,19 @@ class AppColors {
             ? _successDark
             : _successLight;
 
+    static Color error(BuildContext ctx) =>
+        Theme.of(ctx).brightness == Brightness.dark
+            ? _alertDark
+            : _alertLight;
+
+    static Color expense(BuildContext ctx) =>
+        Theme.of(ctx).brightness == Brightness.dark
+            ? _expenseDark
+            : _expenseLight;
+
+    static Color income(BuildContext ctx) =>
+        Theme.of(ctx).brightness == Brightness.dark
+            ? _incomeDark
+            : _incomeLight;
     
 }
