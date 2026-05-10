@@ -3,17 +3,21 @@ import 'package:intl/intl.dart';
 import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
 import '../categories/create_category.dart';
+import '../../core/utils/money_format.dart';
+import '../../components/money_input.dart';
 
 enum PaymentMethod { cash, card, transfer }
 
 class CreateTransactionScreen extends StatefulWidget {
   final Map<String, dynamic> user;
   final bool? initialIsIngreso;
+  final Map<String, dynamic>? transactionToEdit;
 
   const CreateTransactionScreen({
     super.key,
     required this.user,
     this.initialIsIngreso,
+    this.transactionToEdit,
   });
 
   @override
@@ -25,19 +29,54 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _quantityController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _nameController = TextEditingController();
 
   late bool _isIngreso;
   int? _selectedCategoryId;
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = true;
   bool _isSaving = false;
+  int? _amountCents;
+  bool _isEditing = false;
+  int? _editingTransactionId;
 
   @override
   void initState() {
     super.initState();
-    _isIngreso = widget.initialIsIngreso ?? true;
+    _isEditing = widget.transactionToEdit != null;
+    if (_isEditing) {
+      _editingTransactionId = widget.transactionToEdit!['id'] as int;
+      _isIngreso = widget.transactionToEdit!['is_ingreso'] == 1;
+      _quantityController.text = MoneyFormatter.formatFromInt((widget.transactionToEdit!['cantidad'] as int));
+      _amountCents = widget.transactionToEdit!['cantidad'] as int;
+      _nameController.text = widget.transactionToEdit!['nombre'] as String? ?? '';
+      _descriptionController.text = widget.transactionToEdit!['descripcion'] as String? ?? '';
+      _selectedDate = DateTime.parse(widget.transactionToEdit!['fecha'] as String);
+      _selectedCategoryId = widget.transactionToEdit!['categoria_id'] as int?;
+      _selectedPaymentMethod = PaymentMethod.values[widget.transactionToEdit!['metodo_pago'] as int? ?? 0];
+      final horaStr = widget.transactionToEdit!['hora'] as String?;
+      if (horaStr != null && horaStr.isNotEmpty) {
+        try {
+          // Handle both 24h format (HH:mm) and localized format (h:mm AM/PM)
+          final cleanHora = horaStr.replaceAll('AM', '').replaceAll('PM', '').trim();
+          final parts = cleanHora.split(':');
+          if (parts.length >= 2) {
+            int hour = int.parse(parts[0].trim());
+            int minute = int.parse(parts[1].trim());
+            // If original had PM and hour < 12, add 12 (unless it's 12 PM)
+            if (horaStr.contains('PM') && hour < 12) hour += 12;
+            // If original had AM and hour == 12, set to 0 (12 AM = 00:00)
+            if (horaStr.contains('AM') && hour == 12) hour = 0;
+            _selectedTime = TimeOfDay(hour: hour, minute: minute);
+          }
+        } catch (_) {}
+      }
+    } else {
+      _isIngreso = widget.initialIsIngreso ?? true;
+    }
     _loadCategories();
   }
 
@@ -112,11 +151,15 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
     if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor selecciona una categoría')),
       );
+      return;
+    }
+
+    if (_amountCents == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa la cantidad')));
       return;
     }
 
@@ -127,33 +170,59 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           ? widget.user['id'] as int
           : int.tryParse('${widget.user['id']}') ?? 1;
 
-      final quantity = _parseAmountToCents(_quantityController.text);
+      final quantity = _amountCents!;
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      final timeStr = _selectedTime.format(context);
 
-      await DatabaseHelper.instance.createMovimiento(
-        isIngreso: _isIngreso,
-        cantidad: quantity,
-        nombre: _isIngreso ? 'Ingreso' : 'Gasto',
-        descripcion: _descriptionController.text.isNotEmpty
-            ? _descriptionController.text
-            : null,
-        fecha: dateStr,
-        tieneHora: false,
-        categoriaId: _selectedCategoryId!,
-        usuarioId: userId,
-        metodoPago: _selectedPaymentMethod.index,
-      );
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isIngreso ? 'Ingreso registrado' : 'Gasto registrado'),
-          backgroundColor: _isIngreso
-              ? AppColors.success(context)
-              : AppColors.alert(context),
-        ),
-      );
+      if (_isEditing) {
+        // Update existing transaction
+        await DatabaseHelper.instance.updateMovimiento(
+          _editingTransactionId!,
+          {
+            'is_ingreso': _isIngreso ? 1 : 0,
+            'cantidad': quantity,
+            'nombre': _nameController.text.isNotEmpty ? _nameController.text : (_isIngreso ? 'Ingreso' : 'Gasto'),
+            'descripcion': _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+            'fecha': dateStr,
+            'tiene_hora': 1,
+            'hora': '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+            'categoria_id': _selectedCategoryId!,
+            'metodo_pago': _selectedPaymentMethod.index,
+          },
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isIngreso ? 'Ingreso actualizado' : 'Gasto actualizado'),
+            backgroundColor: _isIngreso
+                ? AppColors.success(context)
+                : AppColors.alert(context),
+          ),
+        );
+      } else {
+        // Create new transaction
+        await DatabaseHelper.instance.createMovimiento(
+          isIngreso: _isIngreso,
+          cantidad: quantity,
+          nombre: _nameController.text.isNotEmpty ? _nameController.text : (_isIngreso ? 'Ingreso' : 'Gasto'),
+          descripcion: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+          fecha: dateStr,
+          tieneHora: true,
+          hora: '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+          categoriaId: _selectedCategoryId!,
+          usuarioId: userId,
+          metodoPago: _selectedPaymentMethod.index,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isIngreso ? 'Ingreso registrado' : 'Gasto registrado'),
+            backgroundColor: _isIngreso
+                ? AppColors.success(context)
+                : AppColors.alert(context),
+          ),
+        );
+      }
 
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -173,6 +242,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
   void dispose() {
     _quantityController.dispose();
     _descriptionController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -184,7 +254,9 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         backgroundColor: AppColors.background(context),
         elevation: 0,
         title: Text(
-          _isIngreso ? 'Nuevo Ingreso' : 'Nuevo Gasto',
+          _isEditing
+              ? (_isIngreso ? 'Editar Ingreso' : 'Editar Gasto')
+              : (_isIngreso ? 'Nuevo Ingreso' : 'Nuevo Gasto'),
           style: TextStyle(
             color: AppColors.textPrimary(context),
             fontWeight: FontWeight.w600,
@@ -205,43 +277,114 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Tipo de movimiento
+                    
+
+                    // Money input (clean text only)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: MoneyInput(
+                        controller: _quantityController,
+                        onChangedCents: (c) => _amountCents = c,
+                        fontSize: 28,
+                      ),
+                    ),
+
+                    // Nombre (underlined)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: TextFormField(
+                        controller: _nameController,
+                        style: TextStyle(color: AppColors.textPrimary(context), fontWeight: FontWeight.w800, fontSize: 20),
+                        decoration: InputDecoration(
+                          hintText: 'Nombre del movimiento',
+                          hintStyle: TextStyle(color: AppColors.textSecondary(context)),
+                          border: const UnderlineInputBorder(),
+                        ),
+                        validator: (v) => null,
+                      ),
+                    ),
+
+                    // Descripción (multiline)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextFormField(
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        style: TextStyle(color: AppColors.textPrimary(context)),
+                        decoration: InputDecoration(
+                          hintText: 'Detalles (opcional)',
+                          hintStyle: TextStyle(color: AppColors.textSecondary(context)),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+
+                    
+                    
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: _buildTypeSelector(),
                     ),
 
-                    // Cantidad
+                    // Fecha pill
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildQuantityField(),
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                            builder: (context, child) => Theme(data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: AppColors.primary(context))), child: child!),
+                          );
+                          if (picked != null) setState(() => _selectedDate = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: ShapeDecoration(
+                            color: AppColors.cardBackground(context),
+                            shape: const StadiumBorder(),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            Icon(Icons.calendar_today, size: 16, color: AppColors.textPrimary(context)),
+                            const SizedBox(width: 8),
+                            Text(DateFormat('dd/MM/yyyy').format(_selectedDate), style: TextStyle(color: AppColors.textPrimary(context))),
+                          ]),
+                        ),
+                      ),
                     ),
 
-                    // Categoría
+                    // Hora pill
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildCategorySelector(),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () async {
+                          final picked = await showTimePicker(context: context, initialTime: _selectedTime);
+                          if (picked != null) setState(() => _selectedTime = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: ShapeDecoration(
+                            color: AppColors.cardBackground(context),
+                            shape: const StadiumBorder(),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            Icon(Icons.access_time, size: 16, color: AppColors.textPrimary(context)),
+                            const SizedBox(width: 8),
+                            Text(_selectedTime.format(context), style: TextStyle(color: AppColors.textPrimary(context))),
+                          ]),
+                        ),
+                      ),
                     ),
 
-                    // Descripción
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildDescriptionField(),
-                    ),
+                    // Categoria selector
+                    Padding(padding: const EdgeInsets.only(bottom: 12), child: _buildCategorySelector()),
 
-                    // Fecha
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildDateSelector(),
-                    ),
+                    // Metodo de pago chips
+                    Padding(padding: const EdgeInsets.only(bottom: 24), child: _buildPaymentMethodSelector()),
 
-                    // Método de pago
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: _buildPaymentMethodSelector(),
-                    ),
-
-                    // Botón guardar
+                    // Botón registrar
                     _buildSaveButton(),
                   ],
                 ),
@@ -300,7 +443,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? color : AppColors.cardBackground(context),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(100),
           border: Border.all(color: color, width: isSelected ? 2 : 1),
         ),
         child: Center(
@@ -362,6 +505,16 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
         ),
       ],
     );
+  }
+
+  Color _hexToColor(String hex) {
+    try {
+      var h = hex.replaceAll('#', '');
+      if (h.length == 6) h = 'FF$h';
+      return Color(int.parse(h, radix: 16));
+    } catch (_) {
+      return Colors.grey;
+    }
   }
 
   Widget _buildCategorySelector() {
@@ -430,27 +583,53 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                   ],
                 ),
               )
-            : Container(
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground(context),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: DropdownButton<int>(
-                  value: _selectedCategoryId,
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  style: TextStyle(color: AppColors.textPrimary(context)),
-                  items: _categories.map((category) {
-                    return DropdownMenuItem<int>(
-                      value: category['id'] as int,
-                      child: Text(category['nombre'] as String),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedCategoryId = value);
-                  },
-                ),
+            : Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _categories.map((cat) {
+                  final catId = cat['id'] as int;
+                  final catColor = _hexToColor(cat['color'] as String);
+                  final catIcon = cat['icono'] as String? ?? '';
+                  final catName = cat['nombre'] as String? ?? '';
+                  final isSelected = _selectedCategoryId == catId;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedCategoryId = catId),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: catColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: isSelected ? catColor : catColor.withValues(alpha: 0.5),
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: catColor,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(catIcon, style: const TextStyle(fontSize: 14)),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            catName,
+                            style: TextStyle(
+                              color: catColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
       ],
     );
@@ -549,29 +728,21 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground(context),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: DropdownButton<PaymentMethod>(
-            value: _selectedPaymentMethod,
-            isExpanded: true,
-            underline: const SizedBox(),
-            style: TextStyle(color: AppColors.textPrimary(context)),
-            items: PaymentMethod.values.map((method) {
-              return DropdownMenuItem<PaymentMethod>(
-                value: method,
-                child: Text(_paymentMethodLabels[method] ?? method.name),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _selectedPaymentMethod = value);
-              }
-            },
-          ),
+        Wrap(
+          spacing: 8,
+          children: PaymentMethod.values.map((method) {
+            final idx = method.index;
+            final selected = _selectedPaymentMethod == method;
+            return ChoiceChip(
+              label: Text(_paymentMethodLabels[method] ?? method.name),
+              selected: selected,
+              onSelected: (_) => setState(() => _selectedPaymentMethod = method),
+              selectedColor: AppColors.primary(context),
+              backgroundColor: AppColors.cardBackground(context),
+              labelStyle: TextStyle(color: selected ? Colors.white : AppColors.textPrimary(context)),
+              shape: const StadiumBorder(),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -583,12 +754,10 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
       child: ElevatedButton(
         onPressed: _isSaving ? null : _saveTransaction,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _isIngreso
-              ? AppColors.success(context)
-              : AppColors.alert(context),
+          backgroundColor: AppColors.primary(context),
           disabledBackgroundColor: AppColors.textSecondary(context),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         ),
         child: _isSaving
             ? SizedBox(
@@ -600,7 +769,7 @@ class _CreateTransactionScreenState extends State<CreateTransactionScreen> {
                 ),
               )
             : Text(
-                _isIngreso ? 'Registrar Ingreso' : 'Registrar Gasto',
+                _isEditing ? 'Guardar cambios' : 'Registrar',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
