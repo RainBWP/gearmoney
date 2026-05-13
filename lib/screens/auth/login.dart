@@ -8,8 +8,6 @@ import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
 import '../home/main_layout.dart';
 
-
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,7 +15,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class LogoWidget extends StatelessWidget { // Widget para el logo SVG
+class LogoWidget extends StatelessWidget {
+  // Widget para el logo SVG
   const LogoWidget({super.key});
 
   @override
@@ -26,7 +25,8 @@ class LogoWidget extends StatelessWidget { // Widget para el logo SVG
       'assets/svgs/logos/GearMoneyLogo.svg',
       alignment: Alignment.centerLeft,
       semanticsLabel: 'Gear Money Logo',
-      placeholderBuilder: (BuildContext context) => const CircularProgressIndicator(),
+      placeholderBuilder: (BuildContext context) =>
+          const CircularProgressIndicator(),
     );
   }
 }
@@ -51,7 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isPasswordInvalid = true);
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres')),
+        const SnackBar(
+          content: Text('La contraseña debe tener al menos 6 caracteres'),
+        ),
       );
       return;
     }
@@ -68,7 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await DatabaseHelper.instance.database; // Asegura que la base de datos esté inicializada
+      await DatabaseHelper
+          .instance
+          .database; // Asegura que la base de datos esté inicializada
       final user = await DatabaseHelper.instance.readUsuario(
         _emailController.text,
         _passwordController.text,
@@ -89,9 +93,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
 
     if (mounted) {
@@ -106,8 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,20 +120,18 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo SVG Placeholder
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: LogoWidget(),
-              ),
+              const Align(alignment: Alignment.centerLeft, child: LogoWidget()),
               const SizedBox(height: 48),
 
               // Email Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Correo:',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -148,7 +148,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -167,7 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: _isPasswordInvalid ? Colors.red : Colors.black,
+                        color: _isPasswordInvalid
+                            ? Colors.red
+                            : AppColors.textPrimary(context),
                       ),
                     ),
                     if (_isPasswordInvalid)
@@ -199,7 +204,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -213,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary(context),
+                    backgroundColor: AppColors.background(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -224,8 +232,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(
@@ -247,9 +256,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.left,
                   text: TextSpan(
                     children: [
-                      const TextSpan(
+                      TextSpan(
                         text: '¿No tienes Cuenta?\n',
-                        style: TextStyle(color: Colors.black, fontSize: 14),
+                        style: TextStyle(
+                          color: AppColors.textPrimary(context),
+                          fontSize: 14,
+                        ),
                       ),
                       TextSpan(
                         text: 'Crea Una Cuenta Aqui',

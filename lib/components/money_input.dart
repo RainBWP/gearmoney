@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/utils/money_format.dart';
 import '../core/colors.dart';
+import 'package:flutter/services.dart';
 
 class MoneyInput extends StatefulWidget {
   final TextEditingController? controller;
@@ -73,6 +74,9 @@ class _MoneyInputState extends State<MoneyInput> {
           child: TextFormField(
             controller: _ctrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
             style: TextStyle(
               color: AppColors.textPrimary(context),
               fontSize: widget.fontSize,
@@ -85,7 +89,8 @@ class _MoneyInputState extends State<MoneyInput> {
               contentPadding: EdgeInsets.zero,
             ),
             validator: (value) {
-              if (value == null || value.trim().isEmpty) return 'Ingresa la cantidad';
+              if (value == null || value.trim().isEmpty)
+                return 'Ingresa la cantidad';
               try {
                 final cents = MoneyFormatter.parseToInt(value.trim());
                 if (cents <= 0) return 'La cantidad debe ser mayor a 0';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
+import '../../core/theme_manager.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -22,8 +23,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.user['nombre'] ?? '');
-    _lastnameController =
-        TextEditingController(text: widget.user['apellidos'] ?? '');
+    _lastnameController = TextEditingController(
+      text: widget.user['apellidos'] ?? '',
+    );
     _emailController = TextEditingController(text: widget.user['correo'] ?? '');
   }
 
@@ -67,9 +69,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) {
@@ -121,12 +123,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       hintStyle: TextStyle(color: Colors.grey[400]),
                       border: InputBorder.none,
                       enabledBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.grey[400]!, width: 1),
+                        borderSide: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 1,
+                        ),
                       ),
                       disabledBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.grey[400]!, width: 1),
+                        borderSide: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 1,
+                        ),
                       ),
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -155,12 +161,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       hintStyle: TextStyle(color: Colors.grey[400]),
                       border: InputBorder.none,
                       enabledBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.grey[400]!, width: 1),
+                        borderSide: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 1,
+                        ),
                       ),
                       disabledBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.grey[400]!, width: 1),
+                        borderSide: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 1,
+                        ),
                       ),
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -190,12 +200,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       hintStyle: TextStyle(color: Colors.grey[400]),
                       border: InputBorder.none,
                       enabledBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.grey[400]!, width: 1),
+                        borderSide: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 1,
+                        ),
                       ),
                       disabledBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.grey[400]!, width: 1),
+                        borderSide: BorderSide(
+                          color: Colors.grey[400]!,
+                          width: 1,
+                        ),
                       ),
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -233,7 +247,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white),
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(
@@ -247,6 +262,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            Text(
+              'Ajustes',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground(context),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ValueListenableBuilder<ThemeMode>(
+                valueListenable: themeNotifier,
+                builder: (context, currentMode, child) {
+                  // Determina si el switch debe estar encendido (true = dark mode)
+                  final isDark =
+                      currentMode == ThemeMode.dark ||
+                      (currentMode == ThemeMode.system &&
+                          MediaQuery.of(context).platformBrightness ==
+                              Brightness.dark);
+
+                  return SwitchListTile(
+                    title: Text(
+                      'Modo Oscuro',
+                      style: TextStyle(
+                        color: AppColors.textPrimary(context),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    secondary: Icon(
+                      isDark ? Icons.dark_mode : Icons.light_mode,
+                      color: AppColors.primary(context),
+                    ),
+                    value: isDark,
+                    activeColor: AppColors.primary(context),
+                    onChanged: (value) {
+                      // Cambia el estado global del tema
+                      themeNotifier.value = value
+                          ? ThemeMode.dark
+                          : ThemeMode.light;
+                    },
+                  );
+                },
               ),
             ),
           ],

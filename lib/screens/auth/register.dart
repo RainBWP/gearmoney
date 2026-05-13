@@ -4,9 +4,6 @@ import 'login.dart';
 import '../../core/database/db_helper.dart';
 import '../../core/colors.dart';
 
-
-
-
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -31,27 +28,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor completa todos los campos')),
+        SnackBar(
+          content: Text(
+            'Por favor completa todos los campos',
+
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ),
       );
       return;
     }
     if (!_emailController.text.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa un correo válido')),
+        SnackBar(
+          content: Text(
+            'Por favor ingresa un correo válido',
+
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ),
       );
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Las contraseñas no coinciden')),
+        SnackBar(
+          content: Text(
+            'Las contraseñas no coinciden',
+
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ),
       );
       return;
     }
 
     if (_passwordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('La contraseña debe tener al menos 6 caracteres')),
+        SnackBar(
+          content: Text(
+            'La contraseña debe tener al menos 6 caracteres',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -68,8 +103,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Cuenta creada exitosamente!')),
-          
+          SnackBar(
+            content: Text(
+              '¡Cuenta creada exitosamente!',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary(context),
+              ),
+            ),
+          ),
         );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -78,7 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString().replaceAll('Exception: ', '');
-        final isDuplicateEmail = errorMessage == 'Este correo ya está registrado';
+        final isDuplicateEmail =
+            errorMessage == 'Este correo ya está registrado';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -122,23 +166,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo SVG Placeholder
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: LogoWidget(),
-              ),
+              const Align(alignment: Alignment.centerLeft, child: LogoWidget()),
               const SizedBox(height: 48),
 
               // Nombre Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Nombre:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _nameController,
+                style: TextStyle(color: AppColors.textPrimary(context)),
                 decoration: InputDecoration(
                   hintText: 'Juan',
                   hintStyle: TextStyle(color: Colors.grey[400]),
@@ -146,8 +192,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder:  UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -155,16 +204,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
 
               // Apellidos Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Apellidos:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _lastnameController,
+                style: TextStyle(color: AppColors.textPrimary(context)),
                 decoration: InputDecoration(
                   hintText: 'Pérez',
                   hintStyle: TextStyle(color: Colors.grey[400]),
@@ -172,8 +226,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
-                  focusedBorder:  UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -181,16 +238,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
 
               // Email Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Correo:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
+                style: TextStyle(color: AppColors.textPrimary(context)),
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'mail@domain.com',
@@ -200,7 +262,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -208,16 +273,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
 
               // Contraseña Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Contraseña:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
+                style: TextStyle(color: AppColors.textPrimary(context)),
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: '*******',
@@ -227,7 +297,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -235,16 +308,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
 
               // Confirmar Contraseña Label
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Confirmar Contraseña:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary(context),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _confirmPasswordController,
+                style: TextStyle(color: AppColors.textPrimary(context)),
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: '*******',
@@ -254,7 +332,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderSide: BorderSide(color: Colors.grey[400]!),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primary(context), width: 2),
+                    borderSide: BorderSide(
+                      color: AppColors.primary(context),
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -279,16 +360,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           width: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'Crear Usuario',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary(context),
                           ),
                         ),
                 ),
