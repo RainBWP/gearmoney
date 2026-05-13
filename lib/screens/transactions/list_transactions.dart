@@ -8,7 +8,7 @@ import '../../components/money_display.dart';
 import '../../components/category_chip.dart';
 import 'create_transactions.dart';
 
-
+// hola
 class ListTransactionsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
 
