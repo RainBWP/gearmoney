@@ -1,6 +1,6 @@
 {
-    "name": "app_1_demo",
-    "short_name": "app_1_demo",
+    "name": "gearmoney",
+    "short_name": "gearmoney",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

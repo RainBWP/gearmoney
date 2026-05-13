@@ -1,16 +1,21 @@
-# app_1_demo
+# gearmoney
+App en flutter para control de Gastos
 
-A new Flutter project.
+Funciona en:
+- Android
+- IOS
+- Windows (Pero se ve feo)
 
-## Getting Started
+# Mockup Followed
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![Mockup 1](githubmedia/Mockup_01.jpg)
+![Mockup 2](githubmedia/Mockup_02.jpg)
+![Mockup 3](githubmedia/Mockup_03.jpg)
+![Mockup 4](githubmedia/Mockup_04.jpg)
+![Mockup 5](githubmedia/Mockup_05.jpg)
+![Mockup 6](githubmedia/Mockup_06.jpg)
+![Mockup 7](githubmedia/Mockup_07.jpg)
+![Mockup 8](githubmedia/Mockup_08.jpg)
+![Mockup 9](githubmedia/Mockup_09.jpg)
+![Mockup 10](githubmedia/Mockup_10.jpg)
+![Mockup 11](githubmedia/Mockup_11.jpg)
