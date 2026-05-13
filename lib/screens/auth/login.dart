@@ -24,6 +24,9 @@ class LogoWidget extends StatelessWidget {
     return SvgPicture.asset(
       'assets/svgs/logos/GearMoneyLogo.svg',
       alignment: Alignment.centerLeft,
+      colorFilter: Theme.of(context).brightness == Brightness.dark
+          ? ColorFilter.mode(AppColors.primary(context), BlendMode.srcIn)
+          : null,
       semanticsLabel: 'Gear Money Logo',
       placeholderBuilder: (BuildContext context) =>
           const CircularProgressIndicator(),
@@ -221,28 +224,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.background(context),
+                    backgroundColor: AppColors.primary(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                              AppColors.background(context),
                             ),
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'Iniciar Sesión',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: AppColors.background(context),
                           ),
                         ),
                 ),
