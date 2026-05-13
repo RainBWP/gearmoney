@@ -1,4 +1,5 @@
 # gearmoney
+![Social Banner](githubmedia/GithubPanel.png)
 App en flutter para control de Gastos
 
 Funciona en:
