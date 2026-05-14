@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/colors.dart';
 import '../../core/database/db_helper.dart';
+import '../auth/login.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -35,6 +36,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  int get _userId {
+    return (widget.user['id'] is int)
+        ? widget.user['id'] as int
+        : int.tryParse('${widget.user['id']}') ?? 1;
+  }
+
   Future<void> _saveProfile() async {
     if (_nameController.text.isEmpty ||
         _lastnameController.text.isEmpty ||
@@ -48,16 +55,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final int userId = (widget.user['id'] is int)
-          ? widget.user['id'] as int
-          : int.tryParse('${widget.user['id']}') ?? 1;
-
       await DatabaseHelper.instance.updateUsuario(
-        userId,
+        _userId,
         nombre: _nameController.text.trim(),
         apellidos: _lastnameController.text.trim(),
         correo: _emailController.text.trim(),
       );
+
+      widget.user['nombre'] = _nameController.text.trim();
+      widget.user['apellidos'] = _lastnameController.text.trim();
+      widget.user['correo'] = _emailController.text.trim();
 
       if (mounted) {
         setState(() => _isEditing = false);
@@ -69,6 +76,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  void _cancelEditing() {
+    setState(() {
+      _isEditing = false;
+      _nameController.text = widget.user['nombre'] ?? '';
+      _lastnameController.text = widget.user['apellidos'] ?? '';
+      _emailController.text = widget.user['correo'] ?? '';
+    });
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Eliminar perfil'),
+          content: const Text(
+            '¿Estás seguro de que deseas borrar tu perfil? Esta acción no se puede deshacer.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await _deleteProfile();
+    }
+  }
+
+  Future<void> _deleteProfile() async {
+    setState(() => _isSaving = true);
+
+    try {
+      await DatabaseHelper.instance.deleteUsuario(_userId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil eliminado correctamente')),
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al borrar perfil: ${e.toString()}')),
         );
       }
     } finally {
@@ -244,6 +317,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color: Colors.white,
                               ),
                             ),
+                    ),
+                  ),
+                  if (_isEditing) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: _isSaving ? null : _cancelEditing,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: AppColors.textSecondary(context),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: _isSaving ? null : () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: AppColors.textSecondary(context),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cerrar sesión',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: _isSaving ? null : _confirmDelete,
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.red.shade50,
+                        foregroundColor: Colors.red,
+                        side: BorderSide(color: Colors.red.shade200),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Borrar perfil',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
