@@ -1,6 +1,6 @@
 # gearmoney
 App en flutter para control de Gastos
-
+![Github Banner](githubmedia/GithubPanel.png)
 Funciona en:
 - Android
 - IOS
