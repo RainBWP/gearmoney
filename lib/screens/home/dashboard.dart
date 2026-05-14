@@ -410,7 +410,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final monto = (p['monto'] is int)
           ? p['monto'] as int
           : int.tryParse('${p['monto']}') ?? 0;
-      items.add(BudgetCardSmall(name: name, amount: monto));
+      final restante = p['restante'] as int? ?? monto;
+      final gastoTotal = p['gasto_total'] as int? ?? 0;
+      final esExcedido = p['es_excedido'] as bool? ?? false;
+      items.add(
+        BudgetCardSmall(
+          name: name, 
+          amount: monto,
+          restante: restante,        // <- NUEVO
+          gastoTotal: gastoTotal,    // <- NUEVO
+          esExcedido: esExcedido,    // <- NUEVO
+        )
+      );
     }
 
     return items;
