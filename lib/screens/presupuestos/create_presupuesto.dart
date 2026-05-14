@@ -16,16 +16,19 @@ class _CreatePresupuestoScreenState extends State<CreatePresupuestoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _montoController = TextEditingController();
-  int _selectedDay = 1;
+  late int _selectedDay;
   List<Map<String, dynamic>> _categories = [];
   final List<int> _selectedCategoryIds = [];
   bool _isLoading = true;
   bool _isSaving = false;
+  Set<int> _usedCategoryIds = {}; // NUEVO: Para almacenar categorías ya en uso
 
   @override
   void initState() {
     super.initState();
+    _selectedDay = DateTime.now().day;
     _loadCategories();
+    _loadUsedCategories();
   }
 
   Future<void> _loadCategories() async {
@@ -49,6 +52,45 @@ class _CreatePresupuestoScreenState extends State<CreatePresupuestoScreen> {
           SnackBar(content: Text('Error al cargar categorías: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _loadUsedCategories() async {
+    try {
+      final int userId = (widget.user['id'] is int)
+          ? widget.user['id'] as int
+          : int.tryParse('${widget.user['id']}') ?? 1;
+
+      final dbh = DatabaseHelper.instance;
+      final db = await dbh.database;
+
+      // 1. Obtener los presupuestos de este usuario
+      final pres = await db.query(
+        'Presupuestos',
+        columns: ['id'],
+        where: 'usuario_id = ?',
+        whereArgs: [userId],
+      );
+
+      final presIds = pres.map((p) => p['id'] as int).toList();
+
+      if (presIds.isEmpty) return;
+
+      // 2. Buscar las categorías asociadas a esos presupuestos
+      final placeholders = List.filled(presIds.length, '?').join(',');
+      final catRels = await db.query(
+        'Presupuestos_Categorias',
+        columns: ['id_categoria'],
+        where: 'id_presupuesto IN ($placeholders)',
+        whereArgs: presIds,
+      );
+
+      // 3. Guardarlas en nuestro Set para fácil acceso
+      setState(() {
+        _usedCategoryIds = catRels.map((r) => r['id_categoria'] as int).toSet();
+      });
+    } catch (e) {
+      debugPrint('Error al cargar categorías en uso: $e');
     }
   }
 
@@ -234,7 +276,6 @@ class _CreatePresupuestoScreenState extends State<CreatePresupuestoScreen> {
                         ],
                       ),
                     ),
-
                     // Categorías
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24),
@@ -252,64 +293,87 @@ class _CreatePresupuestoScreenState extends State<CreatePresupuestoScreen> {
                           const SizedBox(height: 12),
                           ..._categories.map((category) {
                             final categoryId = category['id'] as int;
-                            final isSelected =
-                                _selectedCategoryIds.contains(categoryId);
+                            final isSelected = _selectedCategoryIds.contains(categoryId);
+                            
+                            // NUEVO: Verificamos si la categoría ya está en uso
+                            final isUsed = _usedCategoryIds.contains(categoryId);
 
                             return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  if (isSelected) {
-                                    _selectedCategoryIds.remove(categoryId);
-                                  } else {
-                                    _selectedCategoryIds.add(categoryId);
-                                  }
-                                });
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.primary(context)
-                                          .withValues(alpha: 0.1)
-                                      : AppColors.cardBackground(context),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
+                              // NUEVO: Si está en uso, el onTap es null para deshabilitar el toque
+                              onTap: isUsed 
+                                  ? null 
+                                  : () {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _selectedCategoryIds.remove(categoryId);
+                                        } else {
+                                          _selectedCategoryIds.add(categoryId);
+                                        }
+                                      });
+                                    },
+                              // NUEVO: Aplicamos un widget de Opacity si la categoría está en uso
+                              child: Opacity(
+                                opacity: isUsed ? 0.5 : 1.0,
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
                                     color: isSelected
-                                        ? AppColors.primary(context)
-                                        : AppColors.textSecondary(context)
-                                            .withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      isSelected
-                                          ? Icons.check_circle
-                                          : Icons.radio_button_unchecked,
+                                        ? AppColors.primary(context).withValues(alpha: 0.1)
+                                        : AppColors.cardBackground(context),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
                                       color: isSelected
                                           ? AppColors.primary(context)
-                                          : AppColors.textSecondary(context),
+                                          : AppColors.textSecondary(context).withValues(alpha: 0.3),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      category['nombre'] ?? '',
-                                      style: TextStyle(
-                                        color: AppColors.textPrimary(context),
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.w400,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        // NUEVO: Cambiamos el ícono si ya está ocupada
+                                        isUsed 
+                                            ? Icons.block // o Icons.lock, indicando que no se puede usar
+                                            : isSelected
+                                                ? Icons.check_circle
+                                                : Icons.radio_button_unchecked,
+                                        color: isUsed
+                                            ? AppColors.textSecondary(context)
+                                            : isSelected
+                                                ? AppColors.primary(context)
+                                                : AppColors.textSecondary(context),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        category['nombre'] ?? '',
+                                        style: TextStyle(
+                                          color: AppColors.textPrimary(context),
+                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                          // NUEVO: Opcional, tachar el texto si está en uso
+                                          decoration: isUsed ? TextDecoration.lineThrough : null, 
+                                        ),
+                                      ),
+                                      // NUEVO: Opcional, agregar una etiqueta para que el usuario entienda
+                                      if (isUsed) ...[
+                                        const Spacer(),
+                                        Text(
+                                          'En uso',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textSecondary(context),
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ]
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ),
-
                     // Botón guardar
                     SizedBox(
                       width: double.infinity,

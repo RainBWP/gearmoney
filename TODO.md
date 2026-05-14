@@ -26,14 +26,14 @@
 - [ ] Estadísticas
     - [ ] Intentar respetar las estadísticas en the mockup
 - Perfil
-    - [ ] Cerrar Perfil
-    - [ ] Borrar Perfil
-    - [ ] Editar perfil (Usar registro page)
+    - [x] Cerrar Perfil
+    - [x] Borrar Perfil
+    - [x] Editar perfil (Usar registro page)
 - Presupuesto
-    - [ ] Cerrar Presupuesto
-    - [ ] Borrar Presupuesto
+    - [x] Cerrar Presupuesto
+    - [x] Borrar Presupuesto
     - [ ] Editar Presupuesto
-    - [ ] Componente presupuesto para Dashboard
+    - [x] Componente presupuesto para Dashboard
 - Categorias
     - [x] Category pills selector (Wrap with colored pills) RESPETAR ESOOO!!!
     - [ ] Mostrar categorias como pills en dashboard

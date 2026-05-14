@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/colors.dart';
+import '../core/utils/money_format.dart';
 
 class BudgetCardSmall extends StatelessWidget {
   final String? name;
@@ -26,13 +27,13 @@ class BudgetCardSmall extends StatelessWidget {
     String label;
     if (ratio > 0.5) {
       statusColor = Colors.green;
-      label = 'Restante: \$$remaining';
+      label = 'Restante: ${MoneyFormatter.formatFromInt(remaining)}';
     } else if (ratio > 0.2) {
       statusColor = Color(0xFFF0C300); // primary yellow
-      label = 'Restante: \$$remaining';
+      label = 'Restante: ${MoneyFormatter.formatFromInt(remaining)}';
     } else {
       statusColor = Colors.red;
-      label = 'Alerta: \$$remaining';
+      label = 'Alerta: ${MoneyFormatter.formatFromInt(remaining)}';
     }
 
     final cats =
@@ -53,7 +54,7 @@ class BudgetCardSmall extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$name - \$$amount',
+                  '$name - ${MoneyFormatter.formatFromInt(amount!)}',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textPrimary(context),

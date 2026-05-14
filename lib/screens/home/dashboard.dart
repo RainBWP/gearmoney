@@ -8,6 +8,8 @@ import '../../components/budget_card_small.dart';
 // import '../transactions/create_transactions.dart';
 import '../categories/category_list.dart';
 import '../../screens/transactions/list_transactions.dart';
+import '../presupuestos/presupuesto_list.dart';
+import '../presupuestos/create_presupuesto.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -39,8 +41,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final int userId = (widget.user['id'] is int)
         ? widget.user['id'] as int
         : int.tryParse('${widget.user['id']}') ?? 1;
-    // filter by usuario_id
+    // filter by usuario_id y ordenar por fecha descendente (más nuevos primero)
     final userMov = allMov.where((m) => m['usuario_id'] == userId).toList();
+    userMov.sort((a, b) {
+      String getDateTimeStr(Map<String, dynamic> m) {
+        final fecha = m['fecha'] ?? '';
+        final hora = m['hora'] ?? '';
+        if (fecha is String && fecha.isNotEmpty) {
+          if (hora is String && hora.isNotEmpty) {
+            // Unir fecha y hora para comparar
+            return '$fecha $hora';
+          }
+          return fecha;
+        }
+        return '';
+      }
+      final strA = getDateTimeStr(a);
+      final strB = getDateTimeStr(b);
+      // Si ambos tienen fecha (y posiblemente hora), comparar como DateTime
+      if (strA.isNotEmpty && strB.isNotEmpty) {
+        try {
+          final dtA = DateTime.parse(strA.replaceAll('/', '-'));
+          final dtB = DateTime.parse(strB.replaceAll('/', '-'));
+          return dtB.compareTo(dtA); // descendente
+        } catch (_) {
+          // Si falla el parseo, comparar como string
+          return strB.compareTo(strA);
+        }
+      }
+      // Fallback: comparar por id descendente
+      final ida = a['id'] is int ? a['id'] as int : int.tryParse('${a['id']}') ?? 0;
+      final idb = b['id'] is int ? b['id'] as int : int.tryParse('${b['id']}') ?? 0;
+      return idb.compareTo(ida);
+    });
 
     // Obtener información de categorías para enriquecer los movimientos
     final categories = await dbh.readCategorias(userId);
@@ -220,24 +253,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Presupuestos',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary(context),
+                  GestureDetector(
+                    onTap: () {
+                      if (presupuestos.isEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                CreatePresupuestoScreen(user: widget.user),
+                          ),
+                        ).then((_) => loadData());
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PresupuestoListScreen(user: widget.user),
+                          ),
+                        ).then((_) => loadData());
+                      }
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Presupuestos',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary(context),
+                            ),
                           ),
                         ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: AppColors.textSecondary(context),
-                      ),
-                    ],
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: AppColors.textSecondary(context),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ..._buildPresupuestos(),
