@@ -111,6 +111,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
       orderBy: 'id ASC',
     );
 
+    final enrichedPres = <Map<String, dynamic>>[];
+    for (final p in pres) {
+      final presId = p['id'] as int;
+      
+      // Consultar categorías asociadas a este presupuesto
+      final catRels = await db.query(
+        'Presupuestos_Categorias',
+        where: 'id_presupuesto = ?',
+        whereArgs: [presId],
+      );
+
+      final categoryIds = catRels.map((r) => r['id_categoria'] as int).toList();
+      
+      // Filtrar de la lista general de categorías que ya descargamos arriba
+      final catDetails = categories
+          .where((c) => categoryIds.contains(c['id']))
+          .toList();
+
+      // Calcular gasto del presupuesto iterando sobre los movimientos del usuario (userMov)
+      int totalGasto = 0;
+      for (final m in userMov) {
+        final movCatId = (m['categoria_id'] is int)
+            ? m['categoria_id'] as int
+            : int.tryParse('${m['categoria_id']}') ?? 0;
+
+        // Si es un gasto y pertenece a una de las categorías del presupuesto
+        if (m['is_ingreso'] == 0 && categoryIds.contains(movCatId)) {
+          final cant = (m['cantidad'] is int)
+              ? m['cantidad'] as int
+              : int.tryParse('${m['cantidad']}') ?? 0;
+          totalGasto += cant;
+        }
+      }
+
+      final presupuestoMonto = p['monto'] as int;
+      final restante = presupuestoMonto - totalGasto;
+      final esExcedido = restante < 0;
+
+      enrichedPres.add({
+        ...p,
+        'categorias': catDetails,
+        'gasto_total': totalGasto,
+        'restante': restante,
+        'es_excedido': esExcedido,
+      });
+    }
+
     if (!mounted) return;
 
     setState(() {
@@ -118,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       totalGastos = gastos;
       saldo = ingresos - gastos;
       movimientos = enrichedMov;
-      presupuestos = pres;
+      presupuestos = enrichedPres;
     });
   }
 
